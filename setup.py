@@ -63,6 +63,7 @@ from _common import BSD  # noqa: E402
 from _common import FREEBSD  # noqa: E402
 from _common import LINUX  # noqa: E402
 from _common import MACOS  # noqa: E402
+from _common import IPHONEOS  # noqa: E402
 from _common import NETBSD  # noqa: E402
 from _common import OPENBSD  # noqa: E402
 from _common import POSIX  # noqa: E402
@@ -149,6 +150,31 @@ def get_version():
         msg = "couldn't find version string"
         raise ValueError(msg)
 
+_system_encoding = sys.getdefaultencoding()
+if _system_encoding is None:
+    _system_encoding = "iso-8859-1" # :-)
+
+def decode_input(data):
+    if isinstance(data, str):
+        return data
+    return data.decode(_system_encoding)
+
+def run_command(cmd, *args):
+    if not cmd:
+        return ''
+    if args:
+        cmd = ' '.join((cmd,) + args)
+
+    p = subprocess.Popen(cmd, shell=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout_data, errors = p.communicate()
+
+    if p.returncode != 0 and errors:
+        return ''
+    return decode_input(stdout_data).strip()
+
+def get_xcode_isysroot():
+    return run_command('xcrun', "--sdk", "iphoneos", '--show-sdk-path')
 
 VERSION = get_version()
 macros.append(('PSUTIL_VERSION', int(VERSION.replace('.', ''))))
@@ -456,6 +482,43 @@ elif AIX:
         # fmt: on
     )
 
+elif IPHONEOS:
+    macros.append(("PSUTIL_IPHONEOS", 1))
+    ext = Extension(
+        'psutil._psutil_iphoneos',
+        sources=(
+            sources
+            + ["psutil/_psutil_ios.c"]
+            + glob.glob("psutil/arch/ios/*.c")
+            + glob.glob("psutil/arch/ios/*.m")
+        ),
+        define_macros=macros,
+        extra_compile_args=[
+            "-isysroot", 
+            get_xcode_isysroot(),
+            "-arch", 
+            "arm64", 
+            "-miphoneos-version-min=14.0",
+        ],
+        extra_link_args=[
+            '-isysroot', 
+            get_xcode_isysroot(),
+            "-arch", 
+            "arm64", 
+            "-miphoneos-version-min=14.0",
+            '-framework',
+            'CoreFoundation',
+            '-framework',
+            'IOKit',
+            '-framework',
+            'UIKit',
+        ],
+        # fmt: off
+        # python 2.7 compatibility requires no comma
+        **py_limited_api
+        # fmt: on
+    )
+
 else:
     sys.exit("platform {} is not supported".format(sys.platform))
 
@@ -493,6 +556,14 @@ if POSIX:
             posix_extension.define_macros.append(('NEW_MIB_COMPLIANT', 1))
     elif AIX:
         posix_extension.sources.append('psutil/arch/aix/ifaddrs.c')
+    elif IPHONEOS:
+        posix_extension.extra_compile_args = [
+            "-isysroot", 
+            get_xcode_isysroot(),
+            "-arch", 
+            "arm64", 
+            "-miphoneos-version-min=14.0",
+        ]
 
     extensions = [ext, posix_extension]
 else:

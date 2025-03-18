@@ -54,6 +54,7 @@ from ._common import CONN_TIME_WAIT
 from ._common import FREEBSD
 from ._common import LINUX
 from ._common import MACOS
+from ._common import IPHONEOS
 from ._common import NETBSD
 from ._common import NIC_DUPLEX_FULL
 from ._common import NIC_DUPLEX_HALF
@@ -133,6 +134,9 @@ elif AIX:
     # This is public API and it will be retrieved from _pslinux.py
     # via sys.modules.
     PROCFS_PATH = "/proc"
+
+elif IPHONEOS:
+    from . import _psios as _psplatform
 
 else:  # pragma: no cover
     msg = f"platform {sys.platform} is not supported"

@@ -121,6 +121,16 @@ void convert_kvm_err(const char *syscall, char *errbuf);
 #endif
 
 // ====================================================================
+// --- macOS
+// ====================================================================
+
+#ifdef PSUTIL_IPHONEOS
+    #include <mach/mach_time.h>
+
+    extern struct mach_timebase_info PSUTIL_MACH_TIMEBASE_INFO;
+#endif
+	
+// ====================================================================
 // --- Windows
 // ====================================================================
 

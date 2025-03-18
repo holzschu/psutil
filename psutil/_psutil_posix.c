@@ -38,6 +38,13 @@
     #include <net/if_media.h>
     #include <net/if.h>
 #endif
+#if defined(PSUTIL_IPHONEOS)
+    #include <netdb.h>
+    #include <netinet/in.h>
+    #include <net/if_dl.h>
+    #include <sys/sockio.h>
+    #include <net/if.h>
+#endif
 #if defined(PSUTIL_SUNOS)
     #include <netdb.h>
     #include <sys/sockio.h>
@@ -258,7 +265,7 @@ psutil_convert_ipaddr(struct sockaddr *addr, int family) {
         len = lladdr->sll_halen;
         data = (const char *)lladdr->sll_addr;
     }
-#elif defined(PSUTIL_BSD) || defined(PSUTIL_OSX)
+#elif defined(PSUTIL_BSD) || defined(PSUTIL_OSX) || defined(PSUTIL_IPHONEOS)
     else if (addr->sa_family == AF_LINK) {
         // Note: prior to Python 3.4 socket module does not expose
         // AF_LINK so we'll do.
@@ -904,6 +911,7 @@ PyInit__psutil_posix(void) {
 
 #if defined(PSUTIL_BSD) || \
         defined(PSUTIL_OSX) || \
+	    defined(PSUTIL_IPHONEOS) || \
         defined(PSUTIL_SUNOS) || \
         defined(PSUTIL_AIX)
     if (PyModule_AddIntConstant(mod, "AF_LINK", AF_LINK))

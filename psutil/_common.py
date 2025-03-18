@@ -39,7 +39,7 @@ _DEFAULT = object()
 # fmt: off
 __all__ = [
     # OS constants
-    'FREEBSD', 'BSD', 'LINUX', 'NETBSD', 'OPENBSD', 'MACOS', 'OSX', 'POSIX',
+    'FREEBSD', 'BSD', 'LINUX', 'NETBSD', 'OPENBSD', 'MACOS', 'OSX', 'IPHONEOS', 'POSIX',
     'SUNOS', 'WINDOWS',
     # connection constants
     'CONN_CLOSE', 'CONN_CLOSE_WAIT', 'CONN_CLOSING', 'CONN_ESTABLISHED',
@@ -80,6 +80,7 @@ WINDOWS = os.name == "nt"
 LINUX = sys.platform.startswith("linux")
 MACOS = sys.platform.startswith("darwin")
 OSX = MACOS  # deprecated alias
+IPHONEOS = sys.platform.startswith("iphoneos") 
 FREEBSD = sys.platform.startswith(("freebsd", "midnightbsd"))
 OPENBSD = sys.platform.startswith("openbsd")
 NETBSD = sys.platform.startswith("netbsd")
@@ -87,6 +88,12 @@ BSD = FREEBSD or OPENBSD or NETBSD
 SUNOS = sys.platform.startswith(("sunos", "solaris"))
 AIX = sys.platform.startswith("aix")
 
+# Detect cross-compiling for iOS on MacOS:
+if MACOS and ("PLATFORM" in os.environ):
+    if (os.getenv('PLATFORM') == 'iphoneos'):
+        MACOS = False
+        OSX = False
+        IPHONEOS = True
 
 # ===================================================================
 # --- API constants
